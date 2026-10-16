@@ -6,7 +6,11 @@ echo "=== Starting OpenClaw Container Initialization ==="
 # Set thread stack and threadpool limit to save OS memory on 512MB Free Tier
 ulimit -s 1024 2>/dev/null || true
 export UV_THREADPOOL_SIZE=2
+export MALLOC_ARENA_MAX=2
 export OPENCLAW_SKIP_CHANNELS=1
+export OPENCLAW_SKIP_CRON=1
+export OPENCLAW_SKIP_GMAIL_WATCHER=1
+export OPENCLAW_DISABLE_BONJOUR=1
 
 # 1. Start Edge Gateway Proxy immediately (guarantees port 10000 and /health open in <1s)
 PORT="${PORT:-10000}"
@@ -14,7 +18,7 @@ export PORT="$PORT"
 export OPENCLAW_INTERNAL_PORT="18789"
 
 echo "Starting Edge Gateway Proxy on port $PORT..."
-NODE_OPTIONS="--max-old-space-size=20" node /app/proxy.js &
+NODE_OPTIONS="--max-old-space-size=12 --max-semi-space-size=1 --optimize-for-size" node /app/proxy.js &
 PROXY_PID=$!
 echo "Edge Gateway Proxy started with PID: $PROXY_PID."
 
@@ -47,10 +51,10 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Enforce worker heap limit patch (guarantees workers never exceed 16MB heap)
+# Enforce worker heap limit patch (guarantees workers never exceed 8MB heap)
 WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" 2>/dev/null || true)
 if [ -n "$WH" ]; then
-    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=16 --max-heap-size=16/g' "$WH" 2>/dev/null || true
+    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=8 --max-heap-size=8/g' "$WH" 2>/dev/null || true
     echo "Enforced worker-heap-flag at $WH"
 fi
 
@@ -111,7 +115,7 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=256 --max-semi-space-size=8"
+export NODE_OPTIONS="--max-old-space-size=192 --max-semi-space-size=4"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"

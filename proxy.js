@@ -47,6 +47,12 @@ function tryServeStatic(req, res) {
   }
 
   const safePath = path.normalize(reqPath).replace(/^(\.\.[\/\\])+/, '');
+
+  // 1. Root and SPA HTML navigation: serve index.html directly from disk (<1ms)
+  const isHtml = safePath === '/' || safePath === '\\' || safePath === '' || safePath === '/index.html' || safePath === '\\index.html' || (
+    req.headers.accept && req.headers.accept.includes('text/html') && !safePath.startsWith('/api/') && !safePath.startsWith('/rpc/')
+  );
+
   const isStaticPrefix = safePath.startsWith('/assets/') ||
                          safePath.startsWith('/themes/') ||
                          safePath.startsWith('/fonts/') ||
@@ -64,12 +70,13 @@ function tryServeStatic(req, res) {
                       safePath === '/manifest.webmanifest' ||
                       safePath === '/asset-manifest.json';
 
-  if (!isStaticPrefix && !isRootAsset) return false;
+  if (!isHtml && !isStaticPrefix && !isRootAsset) return false;
 
-  const fullPath = path.join(CONTROL_UI_DIR, safePath);
+  const targetRelativePath = isHtml ? 'index.html' : safePath.replace(/^[/\\]+/, '');
+  const fullPath = path.join(CONTROL_UI_DIR, targetRelativePath);
   if (!fullPath.startsWith(CONTROL_UI_DIR)) return false;
 
-  const ext = path.extname(safePath).toLowerCase();
+  const ext = isHtml ? '.html' : path.extname(safePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
   const acceptEncoding = req.headers['accept-encoding'] || '';
 
@@ -87,6 +94,7 @@ function tryServeStatic(req, res) {
   }
 
   if (!serveFile) {
+    if (isHtml) return false; // If index.html is missing, fall through to proxy
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' });
     res.end('Not Found');
     return true;
@@ -103,7 +111,9 @@ function tryServeStatic(req, res) {
       headers['Content-Encoding'] = contentEncoding;
     }
 
-    if (safePath.startsWith('/assets/')) {
+    if (isHtml) {
+      headers['Cache-Control'] = 'no-cache, must-revalidate';
+    } else if (safePath.startsWith('/assets/')) {
       headers['Cache-Control'] = 'public, max-age=31536000, immutable';
     } else if (safePath === '/sw.js') {
       headers['Cache-Control'] = 'no-cache';

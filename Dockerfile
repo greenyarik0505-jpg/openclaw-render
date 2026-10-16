@@ -54,9 +54,9 @@ ENV OPENCLAW_SKIP_GMAIL_WATCHER=1
 ENV OPENCLAW_DISABLE_BONJOUR=1
 ENV MALLOC_ARENA_MAX=1
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
-ENV MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
+ENV MALLOC_CONF="narenas:1,dirty_decay_ms:0,muzzy_decay_ms:0"
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=200 --max-semi-space-size=8"
+ENV NODE_OPTIONS="--max-old-space-size=260 --max-semi-space-size=16"
 
 EXPOSE 10000 18789
 

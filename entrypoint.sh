@@ -9,7 +9,7 @@ export UV_THREADPOOL_SIZE=2
 export MALLOC_ARENA_MAX=1
 if [ -f "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2" ]; then
     export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
-    export MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
+    export MALLOC_CONF="narenas:1,dirty_decay_ms:0,muzzy_decay_ms:0"
 fi
 export OPENCLAW_SKIP_CRON=1
 export OPENCLAW_SKIP_GMAIL_WATCHER=1
@@ -127,10 +127,10 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
     "allow": [
       "kimi-claw",
       "openai",
-      "anthropic",
       "memory-core"
     ],
     "deny": [
+      "anthropic",
       "canvas",
       "talk-voice",
       "cua-computer",
@@ -165,8 +165,8 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 }
 EOF
 
-# Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=200 --max-semi-space-size=8"
+# Set balanced memory limits: 260MB heap gives enough headroom above baseline to prevent V8 allocation aborts
+export NODE_OPTIONS="--max-old-space-size=260 --max-semi-space-size=16"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -174,7 +174,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node --optimize-for-size --max-old-space-size=200 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node --max-old-space-size=260 --max-semi-space-size=16 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

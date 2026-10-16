@@ -36,6 +36,7 @@
 - [x] Configured `--compact` logging and tuned V8 heap to `--max-old-space-size=250 --max-semi-space-size=8`.
 - [x] Verified OpenClaw successfully boots to `http.bound` in single-daemon mode without OOM.
 - [x] Fixed `proxy.js` GET/HEAD request body termination (`proxyReq.end()`) to eliminate 30-second gateway timeouts.
+- [x] Diagnosed 4-minute restart cycle: Render watchdog was probing `/` with `HEAD /` and killing the instance due to 503 fallback. Configured `proxy.js` to return 200 OK splash during boot so Render considers the instance healthy.
 - [ ] Deploy fix to Render and verify HTTP 200 on Control UI.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

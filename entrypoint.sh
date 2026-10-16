@@ -7,6 +7,10 @@ echo "=== Starting OpenClaw Container Initialization ==="
 ulimit -s 1024 2>/dev/null || true
 export UV_THREADPOOL_SIZE=2
 export MALLOC_ARENA_MAX=1
+if [ -f "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2" ]; then
+    export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
+    export MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
+fi
 export OPENCLAW_SKIP_CRON=1
 export OPENCLAW_SKIP_GMAIL_WATCHER=1
 export OPENCLAW_DISABLE_BONJOUR=1

@@ -6,7 +6,7 @@ echo "=== Starting OpenClaw Container Initialization ==="
 # Set thread stack and threadpool limit to save OS memory on 512MB Free Tier
 ulimit -s 1024 2>/dev/null || true
 export UV_THREADPOOL_SIZE=2
-export MALLOC_ARENA_MAX=2
+export MALLOC_ARENA_MAX=1
 export OPENCLAW_SKIP_CRON=1
 export OPENCLAW_SKIP_GMAIL_WATCHER=1
 export OPENCLAW_DISABLE_BONJOUR=1
@@ -143,7 +143,7 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=192 --max-semi-space-size=4"
+export NODE_OPTIONS="--max-old-space-size=240 --max-semi-space-size=8"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -151,7 +151,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node --optimize-for-size --max-old-space-size=192 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node --optimize-for-size --max-old-space-size=240 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

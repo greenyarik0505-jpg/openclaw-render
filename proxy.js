@@ -53,7 +53,7 @@ const server = http.createServer((req, res) => {
     path: req.url,
     method: req.method,
     headers: headers,
-    timeout: 30000
+    timeout: 60000
   }, (proxyRes) => {
     if (hasResponded) return;
     hasResponded = true;

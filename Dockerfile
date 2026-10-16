@@ -34,7 +34,8 @@ RUN mkdir -p /opt/kimi-claw \
     && curl -fsSL "https://cdn.kimi.com/kimi-claw/kimi-claw-latest.tgz" | tar -xz -C /opt/kimi-claw --strip-components=1 \
     && cd /opt/kimi-claw && npm install --omit=dev --prefer-online && npm cache clean --force
 
-# Copy startup entrypoint
+# Copy startup entrypoint and edge proxy
+COPY proxy.js /app/proxy.js
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 

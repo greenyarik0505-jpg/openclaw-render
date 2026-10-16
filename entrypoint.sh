@@ -3,10 +3,30 @@ set -e
 
 echo "=== Starting OpenClaw Container Initialization ==="
 
-# Memory limit for Free Tier (512MB RAM)
-export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=220"
+# Set memory limits to prevent cgroup OOM on 512MB Free Tier
+export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=200"
 
-# 1. Setup Persistent Storage & Directories
+# 1. Start Edge Gateway Proxy immediately (guarantees port 10000 and /health open in <1s)
+PORT="${PORT:-10000}"
+export PORT="$PORT"
+export OPENCLAW_INTERNAL_PORT="18789"
+
+echo "Starting Edge Gateway Proxy on port $PORT..."
+node /app/proxy.js &
+PROXY_PID=$!
+echo "Edge Gateway Proxy started with PID: $PROXY_PID."
+
+cleanup() {
+    echo "Signal received. Terminating processes..."
+    kill -TERM "$PROXY_PID" 2>/dev/null || true
+    kill -TERM "$GATEWAY_PID" 2>/dev/null || true
+    wait "$GATEWAY_PID" 2>/dev/null || true
+    wait "$PROXY_PID" 2>/dev/null || true
+    exit 0
+}
+trap cleanup SIGTERM SIGINT
+
+# 2. Setup Persistent Storage & Directories
 if [ -d "/data" ]; then
     echo "Persistent volume /data detected. Configuring persistent directories..."
     export OPENCLAW_STATE_DIR="/data/.openclaw"
@@ -25,11 +45,7 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# 2. Setup Gateway Token & Port
-PORT="${PORT:-10000}"
-export OPENCLAW_GATEWAY_PORT="$PORT"
-export OPENCLAW_GATEWAY_BIND="lan"
-
+# 3. Setup Gateway Token
 if [ -z "$OPENCLAW_GATEWAY_TOKEN" ]; then
     export OPENCLAW_GATEWAY_TOKEN="oc_gw_7e8b91a24fd3c6e59012a4b8"
     echo "Using default/configured OPENCLAW_GATEWAY_TOKEN: $OPENCLAW_GATEWAY_TOKEN"
@@ -37,7 +53,7 @@ else
     echo "Using provided OPENCLAW_GATEWAY_TOKEN."
 fi
 
-# 3. Setup Kimi skills and extensions (symlinks for zero overhead)
+# 4. Setup Kimi skills and extensions (symlinks for zero overhead)
 if [ -d "/opt/kimiim/skills" ]; then
     mkdir -p "$OPENCLAW_WORKSPACE_DIR/skills"
     cp -rn /opt/kimiim/skills/* "$OPENCLAW_WORKSPACE_DIR/skills/" 2>/dev/null || true
@@ -50,7 +66,7 @@ if [ -d "/opt/kimi-claw" ]; then
     echo "Kimi Claw extension linked."
 fi
 
-# 4. Configure openclaw.json with Gateway and Kimi Bridge
+# 5. Configure openclaw.json with Gateway and Kimi Bridge
 KIMI_TOKEN="${KIMI_BOT_TOKEN:-km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1}"
 
 echo "Writing configuration to $OPENCLAW_CONFIG_PATH..."
@@ -58,8 +74,8 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 {
   "gateway": {
     "mode": "local",
-    "port": $PORT,
-    "bind": "lan",
+    "port": 18789,
+    "bind": "loopback",
     "publicOrigin": "https://openclaw-tlzq.onrender.com",
     "auth": {
       "mode": "token",
@@ -70,7 +86,9 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
       "allowedOrigins": [
         "https://openclaw-tlzq.onrender.com",
         "http://localhost:10000",
-        "http://127.0.0.1:10000"
+        "http://127.0.0.1:10000",
+        "http://localhost:18789",
+        "http://127.0.0.1:18789"
       ]
     }
   },
@@ -97,5 +115,8 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 }
 EOF
 
-echo "=== Launching OpenClaw Gateway on port $PORT (bind: lan) ==="
-exec openclaw gateway run --bind lan --port "$PORT" --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured
+echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
+openclaw gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured &
+GATEWAY_PID=$!
+
+wait "$GATEWAY_PID"

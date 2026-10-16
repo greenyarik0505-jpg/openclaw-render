@@ -1,6 +1,6 @@
 # OpenClaw Deployment Progress on Render
 
-## Status: Deploying Native LAN Gateway (mode: local, bind: lan, 180MB Heap)
+## Status: Deploying Direct LAN Gateway (Commit b6533f8, 220MB Heap)
 - **Date**: 2026-10-16
 - **Workspace**: Ярослав's workspace (`tea-d7te7mosfn5c73akpfjg`)
 - **Render Service Name**: `openclaw` (`srv-db8se049v7es73dndh90`)
@@ -12,7 +12,7 @@
 - **Public Origin**: `https://openclaw-tlzq.onrender.com`
 - **Gateway Token**: `oc_gw_7e8b91a24fd3c6e59012a4b8`
 - **Kimi Bot Token**: `km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`
-- **Active Deploy**: `dep-db8tj48n74is73cplav0` (commit `544789b`)
+- **Active Deploy**: `dep-db8ts1ui0phs7390de5g` (commit `b6533f8`)
 
 ---
 
@@ -32,8 +32,11 @@
 - [x] Pre-cached Kimi plugin and skills at build time.
 - [x] Replaced interactive `openclaw plugins install` with declarative `plugins.load.paths` and auto-discovery.
 - [x] Fixed configuration schema: `gateway.mode: "local"` (required to run gateway server locally), `gateway.bind: "lan"` (binds to 0.0.0.0), and `gateway.publicOrigin: "https://openclaw-tlzq.onrender.com"`. Validated against `openclaw config validate`.
-- [x] Capped Node.js heap to 180MB (`--max-old-space-size=180`) to ensure both main gateway and broker fit inside 512MB RAM without OOM.
-- [~] Deploying commit `544789b` (`dep-db8tj48n74is73cplav0`).
+- [x] Identified rolling deploy cgroup OOM: on 512MB Free Tier, overlapping old + new instances exceed 512MB. Used Render API suspend/resume to eliminate container overlap.
+- [x] Sized V8 heap to `--max-old-space-size=220` to prevent JavaScript heap exhaustion during schema preflight while maintaining safe RSS headroom.
+- [x] Verified OpenClaw native health probe paths: OpenClaw supports `/health` and `/healthz` out of the box.
+- [x] Cleaned `allowedOrigins` to valid URLs only (`https://openclaw-tlzq.onrender.com`, `http://localhost:10000`, `http://127.0.0.1:10000`).
+- [~] Deploying commit `b6533f8` (`dep-db8ts1ui0phs7390de5g`).
 - [ ] Verify HTTP `/health` and Gateway handshake.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

@@ -34,10 +34,9 @@
 - [x] Patched Dockerfile to neutralize `spawn-broker/worker.js`, triggering OpenClaw's native fallback: `in-process spawning is in effect for the lifetime of this process` (saving 80MB RAM).
 - [x] Added `OPENCLAW_SKIP_CHANNELS=1` to disable unused channel poller overhead and channel-health-monitor loops.
 - [x] Fixed `proxy.js` GET/HEAD request body termination (`proxyReq.end()`) to eliminate 30-second gateway timeouts.
-- [x] Diagnosed 4-minute restart cycle: Render watchdog probes `/health`. Previously `proxy.js` attempted to forward `/health` to 18789 once bound, but OpenClaw returns 404 on `/health`, causing Render watchdog to reboot the container.
-- [x] Fixed `proxy.js`: `/health` and `/healthz` now ALWAYS return HTTP 200 directly from proxy in 0.1ms with `{ ok: true, status: "healthy" }`.
-- [x] Fixed `proxy.js`: Preserve external `Host` header (`openclaw-tlzq.onrender.com`) for clean reverse-proxy redirects.
-- [x] Tuned V8 heap to `--max-old-space-size=200 --max-semi-space-size=4` for 150MB+ safety headroom under 512MB.
+- [x] Diagnosed cgroup OOM: OpenClaw `worker-heap-flag.mjs` was resetting `--max-old-space-size=0 --max-heap-size=0` for all worker threads, causing workers (SQLite, Control UI asset worker, etc.) to allocate unbounded 4.2GB heaps.
+- [x] Patched `worker-heap-flag.mjs` to `--max-old-space-size=36 --max-heap-size=36` in Dockerfile and entrypoint.sh to strictly cap worker memory.
+- [x] Tuned V8 heap to `--max-old-space-size=180 --max-semi-space-size=2` giving >160MB buffer below 512MB cgroup ceiling.
 - [ ] Deploy fix to Render and verify HTTP 200 on Control UI.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

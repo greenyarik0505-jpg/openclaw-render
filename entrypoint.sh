@@ -46,6 +46,13 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
+# Enforce worker heap limit patch (guarantees workers never exceed 36MB heap)
+WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" 2>/dev/null || true)
+if [ -n "$WH" ]; then
+    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=36 --max-heap-size=36/g' "$WH" 2>/dev/null || true
+    echo "Enforced worker-heap-flag at $WH"
+fi
+
 # 3. Setup Gateway Token
 if [ -z "$OPENCLAW_GATEWAY_TOKEN" ]; then
     export OPENCLAW_GATEWAY_TOKEN="oc_gw_7e8b91a24fd3c6e59012a4b8"
@@ -123,7 +130,7 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=200 --max-semi-space-size=4"
+export NODE_OPTIONS="--max-old-space-size=180 --max-semi-space-size=2"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"

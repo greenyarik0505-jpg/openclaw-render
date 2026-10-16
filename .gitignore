@@ -2,3 +2,5 @@ node_modules/
 .openclaw/
 *.log
 .env
+*.tgz
+package/

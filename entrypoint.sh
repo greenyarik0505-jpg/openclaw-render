@@ -120,6 +120,25 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
   },
   "plugins": {
     "enabled": true,
+    "allow": [
+      "kimi-claw",
+      "openai",
+      "anthropic",
+      "memory-core"
+    ],
+    "deny": [
+      "canvas",
+      "talk-voice",
+      "cua-computer",
+      "device-pair",
+      "file-transfer",
+      "geolocation",
+      "github",
+      "linux-node",
+      "ollama",
+      "browser",
+      "xai"
+    ],
     "entries": {
       "kimi-claw": {
         "enabled": true,
@@ -143,7 +162,7 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=240 --max-semi-space-size=8"
+export NODE_OPTIONS="--max-old-space-size=200 --max-semi-space-size=8"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -151,7 +170,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node --optimize-for-size --max-old-space-size=240 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node --optimize-for-size --max-old-space-size=200 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

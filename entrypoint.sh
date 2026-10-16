@@ -4,7 +4,7 @@ set -e
 echo "=== Starting OpenClaw Container Initialization ==="
 
 # Memory limit for Free Tier (512MB RAM)
-export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=200"
+export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=180"
 
 # 1. Setup Persistent Storage & Directories
 if [ -d "/data" ]; then
@@ -57,9 +57,10 @@ echo "Writing configuration to $OPENCLAW_CONFIG_PATH..."
 cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 {
   "gateway": {
-    "mode": "remote",
+    "mode": "local",
     "port": $PORT,
     "bind": "lan",
+    "publicOrigin": "https://openclaw-tlzq.onrender.com",
     "auth": {
       "mode": "token",
       "token": "$OPENCLAW_GATEWAY_TOKEN"

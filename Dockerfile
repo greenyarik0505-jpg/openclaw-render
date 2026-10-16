@@ -22,8 +22,8 @@ RUN npm install -g openclaw@2026.10.4 --prefer-online && npm cache clean --force
     && SP=$(find /usr/local/lib/node_modules/openclaw -name "worker.js" | grep "spawn-broker" || true) \
     && if [ -n "$SP" ]; then echo 'process.exit(1);' > "$SP"; echo "Disabled spawn-broker at $SP"; fi \
     && WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" || true) \
-    && if [ -n "$WH" ]; then sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=8 --max-heap-size=8/g' "$WH"; echo "Patched worker-heap-flag at $WH"; fi \
-    && find /usr/local/lib/node_modules/openclaw -name "*.mjs" -exec sed -i 's/maxWorkers: 2/maxWorkers: 1/g' {} + 2>/dev/null || true
+    && if [ -n "$WH" ]; then echo '// disabled' > "$WH"; echo "Neutralized worker-heap-flag at $WH"; fi \
+    && find /usr/local/lib/node_modules/openclaw -name "*.js" -exec sed -i 's/availableParallelism()/1/g' {} + 2>/dev/null || true
 
 # 2. Pre-download and install kimiim-cli binary and skills at build time
 RUN mkdir -p /usr/local/bin /opt/kimiim/skills/kimiim /opt/kimiim/skills/worker-safety /opt/kimiim/skills/time-awareness \

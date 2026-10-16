@@ -54,12 +54,13 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Enforce worker heap limit patch (guarantees workers never exceed 8MB heap)
+# Neutralize worker-heap-flag (preventing setFlagsFromString from overriding V8 heap limits) and clamp thread pools to 1
 WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" 2>/dev/null || true)
 if [ -n "$WH" ]; then
-    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=8 --max-heap-size=8/g' "$WH" 2>/dev/null || true
-    echo "Enforced worker-heap-flag at $WH"
+    echo '// disabled' > "$WH"
+    echo "Neutralized worker-heap-flag at $WH"
 fi
+find /usr/local/lib/node_modules/openclaw -name "*.js" -exec sed -i 's/availableParallelism()/1/g' {} + 2>/dev/null || true
 
 # 3. Setup Gateway Token
 if [ -z "$OPENCLAW_GATEWAY_TOKEN" ]; then

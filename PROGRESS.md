@@ -1,6 +1,6 @@
 # OpenClaw Deployment Progress on Render
 
-## Status: Deploying Direct LAN Gateway (160MB Heap + optimize-for-size)
+## Status: Deploying Native LAN Gateway (mode: local, bind: lan, 180MB Heap)
 - **Date**: 2026-10-16
 - **Workspace**: Ярослав's workspace (`tea-d7te7mosfn5c73akpfjg`)
 - **Render Service Name**: `openclaw` (`srv-db8se049v7es73dndh90`)
@@ -8,9 +8,11 @@
 - **GitHub Repo**: https://github.com/greenyarik0505-jpg/openclaw-render
 - **Target Version**: OpenClaw v2026.10.4
 - **Gateway Port**: 10000 (HTTPS terminated by Render edge)
-- **Gateway Mode**: `remote`, bind: `lan`
+- **Gateway Mode**: `local`, bind: `lan` (0.0.0.0:10000)
+- **Public Origin**: `https://openclaw-tlzq.onrender.com`
 - **Gateway Token**: `oc_gw_7e8b91a24fd3c6e59012a4b8`
 - **Kimi Bot Token**: `km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`
+- **Active Deploy**: `dep-db8tj48n74is73cplav0` (commit `544789b`)
 
 ---
 
@@ -29,9 +31,9 @@
 - [x] Upgraded Dockerfile to `node:24-bookworm-slim` for OpenClaw engine requirement.
 - [x] Pre-cached Kimi plugin and skills at build time.
 - [x] Replaced interactive `openclaw plugins install` with declarative `plugins.load.paths` and auto-discovery.
-- [x] Optimized Node.js memory footprint (`--max-old-space-size=160 --optimize-for-size`) to fit strictly within 512MB RAM.
-- [x] Configured direct OpenClaw LAN gateway (`mode: remote`, `bind: lan`, `port: 10000`) without proxy overhead.
-- [~] Deploying optimized container.
+- [x] Fixed configuration schema: `gateway.mode: "local"` (required to run gateway server locally), `gateway.bind: "lan"` (binds to 0.0.0.0), and `gateway.publicOrigin: "https://openclaw-tlzq.onrender.com"`. Validated against `openclaw config validate`.
+- [x] Capped Node.js heap to 180MB (`--max-old-space-size=180`) to ensure both main gateway and broker fit inside 512MB RAM without OOM.
+- [~] Deploying commit `544789b` (`dep-db8tj48n74is73cplav0`).
 - [ ] Verify HTTP `/health` and Gateway handshake.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

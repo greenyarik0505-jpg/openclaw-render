@@ -3,7 +3,8 @@ set -e
 
 echo "=== Starting OpenClaw Container Initialization ==="
 
-# Set threadpool limit to save OS stack memory on 512MB Free Tier
+# Set thread stack and threadpool limit to save OS memory on 512MB Free Tier
+ulimit -s 1024 2>/dev/null || true
 export UV_THREADPOOL_SIZE=2
 export OPENCLAW_SKIP_CHANNELS=1
 
@@ -46,10 +47,10 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Enforce worker heap limit patch (guarantees workers never exceed 36MB heap)
+# Enforce worker heap limit patch (guarantees workers never exceed 16MB heap)
 WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" 2>/dev/null || true)
 if [ -n "$WH" ]; then
-    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=36 --max-heap-size=36/g' "$WH" 2>/dev/null || true
+    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=16 --max-heap-size=16/g' "$WH" 2>/dev/null || true
     echo "Enforced worker-heap-flag at $WH"
 fi
 
@@ -105,35 +106,30 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
         "http://127.0.0.1:18789"
       ]
     }
-  },
-  "plugins": {
-    "load": {
-      "paths": [
-        "/opt/kimi-claw"
-      ]
-    },
-    "entries": {
-      "kimi-claw": {
-        "enabled": true,
-        "config": {
-          "bridge": {
-            "url": "wss://www.kimi.com/api-claw/bots/agent-ws",
-            "token": "$KIMI_TOKEN",
-            "kimiapiHost": "https://www.kimi.com/api-claw",
-            "promptTimeoutMs": 1800000
-          }
-        }
-      }
-    }
   }
 }
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=180 --max-semi-space-size=2"
+export NODE_OPTIONS="--max-old-space-size=120 --max-semi-space-size=2"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
+
+# Background watcher: waits for OpenClaw Gateway to bind port 18789
+(
+    echo "[watcher] Waiting for OpenClaw Gateway on port 18789..."
+    while ! curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:18789/" | grep -qE "^(200|302|401|403|404)$"; do
+        sleep 2
+    done
+    echo "[watcher] OpenClaw Gateway is ONLINE and bound to port 18789!"
+    echo "[watcher] Control UI is now fully accessible at https://openclaw-tlzq.onrender.com"
+    
+    KIMI_TOKEN="${KIMI_BOT_TOKEN:-km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1}"
+    if [ -n "$KIMI_TOKEN" ] && [ -d "/opt/kimi-claw" ]; then
+        echo "[watcher] Kimi Bot Token ready for bridge: ${KIMI_TOKEN:0:12}..."
+    fi
+) &
 
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="

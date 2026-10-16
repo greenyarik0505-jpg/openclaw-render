@@ -21,7 +21,7 @@ RUN npm install -g openclaw@2026.10.4 --prefer-online && npm cache clean --force
     && SP=$(find /usr/local/lib/node_modules/openclaw -name "worker.js" | grep "spawn-broker" || true) \
     && if [ -n "$SP" ]; then echo 'process.exit(1);' > "$SP"; echo "Disabled spawn-broker at $SP"; fi \
     && WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" || true) \
-    && if [ -n "$WH" ]; then sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=36 --max-heap-size=36/g' "$WH"; echo "Patched worker-heap-flag at $WH"; fi
+    && if [ -n "$WH" ]; then sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=16 --max-heap-size=16/g' "$WH"; echo "Patched worker-heap-flag at $WH"; fi
 
 # 2. Pre-download and install kimiim-cli binary and skills at build time
 RUN mkdir -p /usr/local/bin /opt/kimiim/skills/kimiim /opt/kimiim/skills/worker-safety /opt/kimiim/skills/time-awareness \
@@ -49,7 +49,7 @@ ENV OPENCLAW_GATEWAY_PORT=10000
 ENV OPENCLAW_GATEWAY_BIND=lan
 ENV OPENCLAW_SKIP_CHANNELS=1
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=180 --max-semi-space-size=2"
+ENV NODE_OPTIONS="--max-old-space-size=120 --max-semi-space-size=2"
 
 EXPOSE 10000 18789
 

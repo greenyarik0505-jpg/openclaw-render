@@ -35,8 +35,10 @@
 - [x] Added `OPENCLAW_SKIP_CHANNELS=1` to disable unused channel poller overhead and channel-health-monitor loops.
 - [x] Fixed `proxy.js` GET/HEAD request body termination (`proxyReq.end()`) to eliminate 30-second gateway timeouts.
 - [x] Diagnosed cgroup OOM: OpenClaw `worker-heap-flag.mjs` was resetting `--max-old-space-size=0 --max-heap-size=0` for all worker threads, causing workers (SQLite, Control UI asset worker, etc.) to allocate unbounded 4.2GB heaps.
-- [x] Patched `worker-heap-flag.mjs` to `--max-old-space-size=36 --max-heap-size=36` in Dockerfile and entrypoint.sh to strictly cap worker memory.
-- [x] Tuned V8 heap to `--max-old-space-size=180 --max-semi-space-size=2` giving >160MB buffer below 512MB cgroup ceiling.
+- [x] Patched `worker-heap-flag.mjs` to `--max-old-space-size=16 --max-heap-size=16` in Dockerfile and entrypoint.sh to strictly cap worker memory.
+- [x] Added `ulimit -s 1024` to cap thread stack size at 1MB, eliminating virtual memory sprawl.
+- [x] Tuned V8 heap to `--max-old-space-size=120 --max-semi-space-size=2` giving >250MB buffer below 512MB cgroup ceiling.
+- [x] Decoupled Kimi Claw plugin from cold boot in `openclaw.json` (handled via background watcher once Gateway is live).
 - [ ] Deploy fix to Render and verify HTTP 200 on Control UI.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

@@ -6,14 +6,14 @@ class LimitedWorker extends OriginalWorker {
     const script = String(filename || '');
     // Heavy workers that evaluate SQLite schema or large preflight snapshots or session behavior
     const isHeavyWorker = script.includes('sqlite') || script.includes('state') || script.includes('read') || script.includes('secret') || script.includes('auth') || script.includes('session') || script.includes('behavior');
-    const maxOldMb = isHeavyWorker ? 38 : 16;
+    const maxOldMb = isHeavyWorker ? 50 : 16;
     const userLimits = options?.resourceLimits || {};
     const opts = {
       ...options,
       resourceLimits: {
         ...userLimits,
         maxOldGenerationSizeMb: maxOldMb,
-        maxYoungGenerationSizeMb: isHeavyWorker ? 4 : 2,
+        maxYoungGenerationSizeMb: isHeavyWorker ? 6 : 2,
         codeRangeSizeMb: isHeavyWorker ? 12 : 4,
         stackSizeMb: 1,
       }

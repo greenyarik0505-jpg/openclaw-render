@@ -1,6 +1,6 @@
 # OpenClaw Deployment Progress on Render
 
-## Status: Deploying Edge Gateway Proxy + Loopback Architecture
+## Status: Deploying Direct LAN Gateway (160MB Heap + optimize-for-size)
 - **Date**: 2026-10-16
 - **Workspace**: Ярослав's workspace (`tea-d7te7mosfn5c73akpfjg`)
 - **Render Service Name**: `openclaw` (`srv-db8se049v7es73dndh90`)
@@ -8,7 +8,7 @@
 - **GitHub Repo**: https://github.com/greenyarik0505-jpg/openclaw-render
 - **Target Version**: OpenClaw v2026.10.4
 - **Gateway Port**: 10000 (HTTPS terminated by Render edge)
-- **Internal Loopback Port**: 18789
+- **Gateway Mode**: `remote`, bind: `lan`
 - **Gateway Token**: `oc_gw_7e8b91a24fd3c6e59012a4b8`
 - **Kimi Bot Token**: `km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`
 
@@ -29,9 +29,9 @@
 - [x] Upgraded Dockerfile to `node:24-bookworm-slim` for OpenClaw engine requirement.
 - [x] Pre-cached Kimi plugin and skills at build time.
 - [x] Replaced interactive `openclaw plugins install` with declarative `plugins.load.paths` and auto-discovery.
-- [x] Added `proxy.js` Edge Gateway proxy listening on `0.0.0.0:10000` to prevent port scan timeout and provide instant health check.
-- [x] Configured OpenClaw in native loopback mode (`127.0.0.1:18789`) with token auth and allowed origins.
-- [~] Deploying updated container image.
+- [x] Optimized Node.js memory footprint (`--max-old-space-size=160 --optimize-for-size`) to fit strictly within 512MB RAM.
+- [x] Configured direct OpenClaw LAN gateway (`mode: remote`, `bind: lan`, `port: 10000`) without proxy overhead.
+- [~] Deploying optimized container.
 - [ ] Verify HTTP `/health` and Gateway handshake.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

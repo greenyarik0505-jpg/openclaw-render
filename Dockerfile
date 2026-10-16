@@ -34,8 +34,7 @@ RUN mkdir -p /opt/kimi-claw \
     && curl -fsSL "https://cdn.kimi.com/kimi-claw/kimi-claw-latest.tgz" | tar -xz -C /opt/kimi-claw --strip-components=1 \
     && cd /opt/kimi-claw && npm install --omit=dev --prefer-online && npm cache clean --force
 
-# Copy proxy and startup entrypoint
-COPY proxy.js /app/proxy.js
+# Copy startup entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
@@ -44,7 +43,7 @@ ENV PORT=10000
 ENV OPENCLAW_GATEWAY_PORT=10000
 ENV OPENCLAW_GATEWAY_BIND=lan
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=256"
+ENV NODE_OPTIONS="--max-old-space-size=160 --optimize-for-size"
 
 EXPOSE 10000 18789
 

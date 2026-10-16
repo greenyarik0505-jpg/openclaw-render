@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: openclaw
+    runtime: docker
+    plan: standard
+    region: frankfurt
+    healthCheckPath: /health
+    disk:
+      name: openclaw-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: OPENCLAW_GATEWAY_PORT
+        value: "10000"
+      - key: OPENCLAW_GATEWAY_BIND
+        value: "lan"
+      - key: OPENCLAW_STATE_DIR
+        value: "/data/.openclaw"
+      - key: OPENCLAW_WORKSPACE_DIR
+        value: "/data/workspace"
+      - key: OPENCLAW_GATEWAY_TOKEN
+        generateValue: true
+      - key: KIMI_BOT_TOKEN
+        value: "km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1"

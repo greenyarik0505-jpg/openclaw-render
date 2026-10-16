@@ -3,8 +3,8 @@ set -e
 
 echo "=== Starting OpenClaw Container Initialization ==="
 
-# Set memory limits to prevent cgroup OOM on 512MB Free Tier
-export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=200"
+# Set threadpool limit to save OS stack memory on 512MB Free Tier
+export UV_THREADPOOL_SIZE=2
 
 # 1. Start Edge Gateway Proxy immediately (guarantees port 10000 and /health open in <1s)
 PORT="${PORT:-10000}"
@@ -12,7 +12,7 @@ export PORT="$PORT"
 export OPENCLAW_INTERNAL_PORT="18789"
 
 echo "Starting Edge Gateway Proxy on port $PORT..."
-node /app/proxy.js &
+NODE_OPTIONS="--max-old-space-size=24" node /app/proxy.js &
 PROXY_PID=$!
 echo "Edge Gateway Proxy started with PID: $PROXY_PID."
 
@@ -72,6 +72,12 @@ KIMI_TOKEN="${KIMI_BOT_TOKEN:-km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1}"
 echo "Writing configuration to $OPENCLAW_CONFIG_PATH..."
 cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 {
+  "browser": {
+    "enabled": false
+  },
+  "telemetry": {
+    "enabled": false
+  },
   "gateway": {
     "mode": "local",
     "port": 18789,
@@ -115,8 +121,16 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 }
 EOF
 
-echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
-openclaw gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured &
-GATEWAY_PID=$!
+# Set lean memory limits to keep OpenClaw strictly within 512MB Free Tier
+export NODE_OPTIONS="--max-old-space-size=128 --optimize-for-size"
 
-wait "$GATEWAY_PID"
+set +e
+echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
+while true; do
+    openclaw gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --verbose &
+    GATEWAY_PID=$!
+    wait "$GATEWAY_PID"
+    EXIT_CODE=$?
+    echo "OpenClaw Gateway exited (code $EXIT_CODE). Restarting in 2s..."
+    sleep 2
+done

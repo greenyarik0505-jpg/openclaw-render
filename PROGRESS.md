@@ -41,8 +41,13 @@
 - [x] Set V8 heap to `--max-old-space-size=192 --max-semi-space-size=4` providing exact headroom for 158MB peak without bloating container RSS.
 - [x] Added `MALLOC_ARENA_MAX=2` to eliminate glibc multi-core heap fragmentation on Linux.
 - [x] Added `OPENCLAW_SKIP_CRON=1`, `OPENCLAW_SKIP_GMAIL_WATCHER=1`, `OPENCLAW_DISABLE_BONJOUR=1` to eliminate background thread loops.
-- [x] Reduced worker heaps from 16MB to 8MB in `worker-heap-flag.mjs`.
-- [x] Reduced proxy memory to 12MB.
-- [ ] Deploy `6fb3378` running on Render, verify HTTP 200 on Control UI.
-- [ ] Verify Kimi Claw Bridge connection.
-- [ ] Provide user with live URL and AI model configuration guide.
+- [x] Identified Control UI worker thread pool (WorkerTaskPool maxWorkers: 2) causing cgroup OOM when incoming GET / was received.
+- [x] Patched `maxWorkers: 2` to `maxWorkers: 1` in OpenClaw distribution files.
+- [x] Calibrated V8 heap to 192MB with 4MB semi-space, eliminating both V8 heap OOM and Linux cgroup limits.
+- [x] Configured `gateway.trustedProxies` with loopback/private subnets and `allowRealIpFallback: true` in openclaw.json so internal proxying succeeds without unattributable proxy rejections.
+- [x] Forwarded `x-forwarded-for` header in `proxy.js`.
+- [x] Removed aggressive background bash polling loop (curl in subshell every 2s) from entrypoint.sh.
+- [x] Deploy `dep-db911g0n74is73d4k8pg` (commit `8624e74`) successfully deployed and is LIVE.
+- [x] Verified live HTTP 200 OK response from OpenClaw Control UI at `https://openclaw-tlzq.onrender.com`.
+- [x] Verified Kimi Claw Bridge pre-configuration (`km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`).
+- [x] Completed instructions for connecting AI models.

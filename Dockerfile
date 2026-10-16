@@ -44,7 +44,7 @@ ENV PORT=10000
 ENV OPENCLAW_GATEWAY_PORT=10000
 ENV OPENCLAW_GATEWAY_BIND=lan
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=128"
+ENV NODE_OPTIONS="--max-old-space-size=165 --max-semi-space-size=4"
 
 EXPOSE 10000 18789
 

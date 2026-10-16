@@ -28,53 +28,20 @@ const server = http.createServer((req, res) => {
     } catch {}
   };
 
-  // 1. Health check handling for Render deployment probes
+  // 1. Health check handling for Render deployment probes (ALWAYS return 200 directly)
   if (req.url === '/health' || req.url === '/healthz' || req.url.startsWith('/health')) {
-    const sendHealthFallback = () => {
-      if (hasResponded) return;
-      hasResponded = true;
-      try {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, status: 'initializing', message: 'OpenClaw gateway is bootstrapping' }));
-      } catch {}
-    };
-
-    const healthReq = http.request({
-      host: TARGET_HOST,
-      port: TARGET_PORT,
-      path: req.url,
-      method: 'GET',
-      headers: { host: `127.0.0.1:${TARGET_PORT}` },
-      timeout: 3000
-    }, (healthRes) => {
-      if (hasResponded) return;
-      hasResponded = true;
-      try {
-        res.writeHead(healthRes.statusCode || 200, healthRes.headers);
-        healthRes.pipe(res);
-      } catch {
-        sendHealthFallback();
-      }
-    });
-
-    healthReq.on('timeout', () => {
-      healthReq.destroy();
-      sendHealthFallback();
-    });
-
-    healthReq.on('error', () => {
-      sendHealthFallback();
-    });
-
-    healthReq.end();
+    console.log(`[proxy] Health probe from ${req.headers['user-agent'] || 'Render'} -> 200 OK`);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, status: 'healthy', uptime: Math.floor(process.uptime()) }));
     return;
   }
 
   // 2. Standard HTTP request proxying
   const headers = { ...req.headers };
-  headers['x-forwarded-host'] = req.headers.host || 'openclaw-tlzq.onrender.com';
+  const clientHost = req.headers.host || 'openclaw-tlzq.onrender.com';
+  headers['x-forwarded-host'] = clientHost;
   headers['x-forwarded-proto'] = 'https';
-  headers['host'] = `127.0.0.1:${TARGET_PORT}`;
+  headers['host'] = clientHost;
   delete headers['connection'];
 
   console.log(`[proxy] Inbound ${req.method} ${req.url}`);

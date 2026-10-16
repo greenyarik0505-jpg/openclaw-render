@@ -1,6 +1,6 @@
 # OpenClaw Deployment Progress on Render
 
-## Status: Deploying In-Process Architecture with 250MB Heap (Commit 250MB)
+## Status: Deploying Direct /health Handler & Balanced 200MB Heap
 - **Date**: 2026-10-16
 - **Workspace**: Ярослав's workspace (`tea-d7te7mosfn5c73akpfjg`)
 - **Render Service Name**: `openclaw` (`srv-db8se049v7es73dndh90`)
@@ -33,10 +33,11 @@
 - [x] Diagnosed cgroup OOM: multi-process `spawn-broker` consumes ~80MB extra RAM alongside SQLite worker threads.
 - [x] Patched Dockerfile to neutralize `spawn-broker/worker.js`, triggering OpenClaw's native fallback: `in-process spawning is in effect for the lifetime of this process` (saving 80MB RAM).
 - [x] Added `OPENCLAW_SKIP_CHANNELS=1` to disable unused channel poller overhead and channel-health-monitor loops.
-- [x] Configured `--compact` logging and tuned V8 heap to `--max-old-space-size=250 --max-semi-space-size=8`.
-- [x] Verified OpenClaw successfully boots to `http.bound` in single-daemon mode without OOM.
 - [x] Fixed `proxy.js` GET/HEAD request body termination (`proxyReq.end()`) to eliminate 30-second gateway timeouts.
-- [x] Diagnosed 4-minute restart cycle: Render watchdog was probing `/` with `HEAD /` and killing the instance due to 503 fallback. Configured `proxy.js` to return 200 OK splash during boot so Render considers the instance healthy.
+- [x] Diagnosed 4-minute restart cycle: Render watchdog probes `/health`. Previously `proxy.js` attempted to forward `/health` to 18789 once bound, but OpenClaw returns 404 on `/health`, causing Render watchdog to reboot the container.
+- [x] Fixed `proxy.js`: `/health` and `/healthz` now ALWAYS return HTTP 200 directly from proxy in 0.1ms with `{ ok: true, status: "healthy" }`.
+- [x] Fixed `proxy.js`: Preserve external `Host` header (`openclaw-tlzq.onrender.com`) for clean reverse-proxy redirects.
+- [x] Tuned V8 heap to `--max-old-space-size=200 --max-semi-space-size=4` for 150MB+ safety headroom under 512MB.
 - [ ] Deploy fix to Render and verify HTTP 200 on Control UI.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

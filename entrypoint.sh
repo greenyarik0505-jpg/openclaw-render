@@ -54,13 +54,12 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Neutralize worker-heap-flag (preventing setFlagsFromString from overriding V8 heap limits) and clamp thread pools to 1
+# Neutralize worker-heap-flag (preventing setFlagsFromString from overriding V8 heap limits)
 WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" 2>/dev/null || true)
 if [ -n "$WH" ]; then
     echo '// disabled' > "$WH"
     echo "Neutralized worker-heap-flag at $WH"
 fi
-find /usr/local/lib/node_modules/openclaw -name "*.js" -exec sed -i 's/availableParallelism()/1/g' {} + 2>/dev/null || true
 
 # 3. Setup Gateway Token
 if [ -z "$OPENCLAW_GATEWAY_TOKEN" ]; then

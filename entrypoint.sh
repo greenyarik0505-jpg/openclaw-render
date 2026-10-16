@@ -69,7 +69,8 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
       "dangerouslyAllowHostHeaderOriginFallback": true,
       "allowedOrigins": [
         "https://openclaw-tlzq.onrender.com",
-        "*"
+        "http://localhost:10000",
+        "http://127.0.0.1:10000"
       ]
     }
   },

@@ -54,7 +54,7 @@ ENV OPENCLAW_SKIP_GMAIL_WATCHER=1
 ENV OPENCLAW_DISABLE_BONJOUR=1
 ENV MALLOC_ARENA_MAX=2
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=160 --max-semi-space-size=4"
+ENV NODE_OPTIONS="--max-old-space-size=192 --max-semi-space-size=4"
 
 EXPOSE 10000 18789
 

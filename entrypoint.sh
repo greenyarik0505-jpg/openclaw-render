@@ -138,12 +138,6 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
         }
       }
     },
-    "installs": {
-      "kimi-claw": {
-        "source": "path",
-        "path": "/opt/kimi-claw"
-      }
-    },
     "load": {
       "paths": [
         "/opt/kimi-claw"

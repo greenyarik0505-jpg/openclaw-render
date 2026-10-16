@@ -4,13 +4,10 @@ const OriginalWorker = wt.Worker;
 class LimitedWorker extends OriginalWorker {
   constructor(filename, options = {}) {
     const script = String(filename || '');
-    // 1. Heartbeats and lifecycles: tiny footprint
-    const isHeartbeat = script.includes('heartbeat') || script.includes('lifecycle') || script.includes('lease');
-    // 2. Heavy worker: ONLY the primary sqlite-store worker and secret decryptor
-    const isHeavyWorker = !isHeartbeat && (script.includes('sqlite-store') || script.includes('store.worker') || script.includes('secret'));
-    // 3. Regular workers: read, state context, etc.
-    const maxOldMb = isHeavyWorker ? 45 : (isHeartbeat ? 10 : 20);
-    const maxYoungMb = isHeavyWorker ? 4 : 2;
+    const isDbWorker = script.includes('sqlite-store') || script.includes('store.worker') || script.includes('secret');
+    const isStateWorker = script.includes('state') || script.includes('read') || script.includes('auth') || script.includes('session') || script.includes('heartbeat');
+    const maxOldMb = isDbWorker ? 48 : (isStateWorker ? 32 : 16);
+    const maxYoungMb = isDbWorker ? 3 : 2;
     const userLimits = options?.resourceLimits || {};
     const opts = {
       ...options,
@@ -18,7 +15,7 @@ class LimitedWorker extends OriginalWorker {
         ...userLimits,
         maxOldGenerationSizeMb: maxOldMb,
         maxYoungGenerationSizeMb: maxYoungMb,
-        codeRangeSizeMb: isHeavyWorker ? 8 : 0,
+        codeRangeSizeMb: 4,
         stackSizeMb: 1,
       }
     };

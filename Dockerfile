@@ -57,7 +57,7 @@ ENV MALLOC_ARENA_MAX=1
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
 ENV MALLOC_CONF="narenas:1,dirty_decay_ms:500,muzzy_decay_ms:500,background_thread:true"
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=200 --max-semi-space-size=4"
+ENV NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=235 --max-semi-space-size=8"
 
 EXPOSE 10000 18789
 

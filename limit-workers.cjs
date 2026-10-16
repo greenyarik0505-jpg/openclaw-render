@@ -4,8 +4,8 @@ const OriginalWorker = wt.Worker;
 class LimitedWorker extends OriginalWorker {
   constructor(filename, options = {}) {
     const script = String(filename || '');
-    const isHeavyWorker = script.includes('sqlite') || script.includes('state') || script.includes('read');
-    const maxOldMb = isHeavyWorker ? 44 : 16;
+    const isHeavyWorker = script.includes('sqlite') || script.includes('state') || script.includes('read') || script.includes('session') || script.includes('agent');
+    const maxOldMb = isHeavyWorker ? 48 : 24;
     const userLimits = options?.resourceLimits || {};
     const opts = {
       ...options,

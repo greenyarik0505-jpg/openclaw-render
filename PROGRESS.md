@@ -1,6 +1,6 @@
 # OpenClaw Deployment Progress on Render
 
-## Status: Deploying Direct LAN Gateway (Commit b6533f8, 220MB Heap)
+## Status: Deploying In-Process Single-Daemon Architecture with Zero-OOM Memory Limits
 - **Date**: 2026-10-16
 - **Workspace**: Ярослав's workspace (`tea-d7te7mosfn5c73akpfjg`)
 - **Render Service Name**: `openclaw` (`srv-db8se049v7es73dndh90`)
@@ -8,11 +8,10 @@
 - **GitHub Repo**: https://github.com/greenyarik0505-jpg/openclaw-render
 - **Target Version**: OpenClaw v2026.10.4
 - **Gateway Port**: 10000 (HTTPS terminated by Render edge)
-- **Gateway Mode**: `local`, bind: `lan` (0.0.0.0:10000)
+- **Gateway Mode**: `local`, internal port: `18789`, proxy port: `10000`
 - **Public Origin**: `https://openclaw-tlzq.onrender.com`
 - **Gateway Token**: `oc_gw_7e8b91a24fd3c6e59012a4b8`
 - **Kimi Bot Token**: `km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`
-- **Active Deploy**: `dep-db8ts1ui0phs7390de5g` (commit `b6533f8`)
 
 ---
 
@@ -30,13 +29,12 @@
 - [x] Configured environment variables (`PORT`, `OPENCLAW_GATEWAY_PORT`, `OPENCLAW_GATEWAY_BIND`, `OPENCLAW_GATEWAY_TOKEN`, `KIMI_BOT_TOKEN`, `OPENCLAW_PUBLIC_ORIGIN`).
 - [x] Upgraded Dockerfile to `node:24-bookworm-slim` for OpenClaw engine requirement.
 - [x] Pre-cached Kimi plugin and skills at build time.
-- [x] Replaced interactive `openclaw plugins install` with declarative `plugins.load.paths` and auto-discovery.
-- [x] Fixed configuration schema: `gateway.mode: "local"` (required to run gateway server locally), `gateway.bind: "lan"` (binds to 0.0.0.0), and `gateway.publicOrigin: "https://openclaw-tlzq.onrender.com"`. Validated against `openclaw config validate`.
-- [x] Identified rolling deploy cgroup OOM: on 512MB Free Tier, overlapping old + new instances exceed 512MB. Used Render API suspend/resume to eliminate container overlap.
-- [x] Sized V8 heap to `--max-old-space-size=220` to prevent JavaScript heap exhaustion during schema preflight while maintaining safe RSS headroom.
-- [x] Verified OpenClaw native health probe paths: OpenClaw supports `/health` and `/healthz` out of the box.
-- [x] Cleaned `allowedOrigins` to valid URLs only (`https://openclaw-tlzq.onrender.com`, `http://localhost:10000`, `http://127.0.0.1:10000`).
-- [~] Deploying commit `b6533f8` (`dep-db8ts1ui0phs7390de5g`).
+- [x] Implemented edge `proxy.js` answering `/health` in <1s for instant Render readiness.
+- [x] Diagnosed cgroup OOM: multi-process `spawn-broker` consumes ~80MB extra RAM alongside SQLite worker threads.
+- [x] Patched Dockerfile to neutralize `spawn-broker/worker.js`, triggering OpenClaw's native fallback: `in-process spawning is in effect for the lifetime of this process` (saving 80MB RAM).
+- [x] Added `OPENCLAW_SKIP_CHANNELS=1` to disable unused channel poller overhead and channel-health-monitor loops.
+- [x] Configured `--compact` logging and tuned V8 heap to `--max-old-space-size=160 --max-semi-space-size=4`.
+- [ ] Push commit and trigger Render deploy.
 - [ ] Verify HTTP `/health` and Gateway handshake.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

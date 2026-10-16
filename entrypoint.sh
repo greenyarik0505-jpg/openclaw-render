@@ -3,8 +3,8 @@ set -e
 
 echo "=== Starting OpenClaw Container Initialization ==="
 
-# Aggressive memory optimization for Free Tier (512MB RAM)
-export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=160 --optimize-for-size"
+# Memory limit for Free Tier (512MB RAM)
+export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=200"
 
 # 1. Setup Persistent Storage & Directories
 if [ -d "/data" ]; then

@@ -7,9 +7,10 @@ echo "=== Starting OpenClaw Container Initialization ==="
 ulimit -s 1024 2>/dev/null || true
 export UV_THREADPOOL_SIZE=2
 export MALLOC_ARENA_MAX=1
+export NODE_DISABLE_COMPILE_CACHE=1
 if [ -f "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2" ]; then
     export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
-    export MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
+    export MALLOC_CONF="narenas:1,dirty_decay_ms:500,muzzy_decay_ms:500,background_thread:true"
 fi
 export OPENCLAW_SKIP_CRON=1
 export OPENCLAW_SKIP_GMAIL_WATCHER=1
@@ -21,7 +22,7 @@ export PORT="$PORT"
 export OPENCLAW_INTERNAL_PORT="18789"
 
 echo "Starting Edge Gateway Proxy on port $PORT..."
-NODE_OPTIONS="--max-old-space-size=12" node --optimize-for-size /app/proxy.js &
+LD_PRELOAD="" NODE_OPTIONS="--max-old-space-size=16" node --optimize-for-size /app/proxy.js &
 PROXY_PID=$!
 echo "Edge Gateway Proxy started with PID: $PROXY_PID."
 
@@ -166,7 +167,7 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=215 --max-semi-space-size=8"
+export NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=200 --max-semi-space-size=4"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -174,7 +175,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node -r /app/limit-workers.cjs --optimize-for-size --max-old-space-size=215 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node -r /app/limit-workers.cjs --optimize-for-size --max-old-space-size=200 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

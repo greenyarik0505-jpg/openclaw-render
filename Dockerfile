@@ -52,11 +52,12 @@ ENV OPENCLAW_GATEWAY_BIND=lan
 ENV OPENCLAW_SKIP_CRON=1
 ENV OPENCLAW_SKIP_GMAIL_WATCHER=1
 ENV OPENCLAW_DISABLE_BONJOUR=1
+ENV NODE_DISABLE_COMPILE_CACHE=1
 ENV MALLOC_ARENA_MAX=1
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
-ENV MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
+ENV MALLOC_CONF="narenas:1,dirty_decay_ms:500,muzzy_decay_ms:500,background_thread:true"
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=215 --max-semi-space-size=8"
+ENV NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=200 --max-semi-space-size=4"
 
 EXPOSE 10000 18789
 

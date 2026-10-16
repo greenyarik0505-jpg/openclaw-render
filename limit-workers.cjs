@@ -1,20 +1,29 @@
-// Enforces strict V8 isolate resource limits on all background worker threads
-// to keep total multi-worker memory within the 512MB Linux cgroup on Render.
+// Enforces strict single-worker scaling and V8 isolate resource limits on Render Free Tier
+const os = require('node:os');
+try {
+  os.availableParallelism = () => 1;
+  const origCpus = os.cpus.bind(os);
+  os.cpus = () => [origCpus()[0] || { model: 'vCPU', speed: 2000, times: {} }];
+} catch {}
 const wt = require('node:worker_threads');
 const OriginalWorker = wt.Worker;
 
 class LimitedWorker extends OriginalWorker {
   constructor(filename, options = {}) {
-    const opts = { ...options };
-    opts.resourceLimits = {
-      maxOldGenerationSizeMb: 16,
-      maxYoungGenerationSizeMb: 4,
-      codeRangeSizeMb: 8,
-      stackSizeMb: 1,
-      ...options.resourceLimits
+    const userLimits = options?.resourceLimits || {};
+    const opts = {
+      ...options,
+      resourceLimits: {
+        ...userLimits,
+        maxOldGenerationSizeMb: 12,
+        maxYoungGenerationSizeMb: 2,
+        codeRangeSizeMb: 4,
+        stackSizeMb: 1,
+      }
     };
     super(filename, opts);
   }
 }
 
 wt.Worker = LimitedWorker;
+

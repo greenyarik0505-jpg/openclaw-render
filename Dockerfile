@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim
+FROM node:24-bookworm-slim
 
 # Install system dependencies required for OpenClaw and native addons
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install OpenClaw latest stable release globally
+# Install OpenClaw latest stable release globally (requires Node 24+)
 RUN npm install -g openclaw@2026.10.4 --prefer-online && npm cache clean --force
 
 # Copy startup entrypoint

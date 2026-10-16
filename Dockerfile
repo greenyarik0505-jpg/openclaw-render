@@ -22,7 +22,7 @@ RUN npm install -g openclaw@2026.10.4 --prefer-online && npm cache clean --force
     && SP=$(find /usr/local/lib/node_modules/openclaw -name "worker.js" | grep "spawn-broker" || true) \
     && if [ -n "$SP" ]; then echo 'process.exit(1);' > "$SP"; echo "Disabled spawn-broker at $SP"; fi \
     && WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" || true) \
-    && if [ -n "$WH" ]; then sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=8 --max-heap-size=8/g' "$WH"; echo "Patched worker-heap-flag at $WH"; fi
+    && if [ -n "$WH" ]; then echo '// disabled' > "$WH"; echo "Neutralized worker-heap-flag at $WH"; fi
 
 # 2. Pre-download and install kimiim-cli binary and skills at build time
 RUN mkdir -p /usr/local/bin /opt/kimiim/skills/kimiim /opt/kimiim/skills/worker-safety /opt/kimiim/skills/time-awareness \
@@ -39,8 +39,9 @@ RUN mkdir -p /opt/kimi-claw \
     && curl -fsSL "https://cdn.kimi.com/kimi-claw/kimi-claw-latest.tgz" | tar -xz -C /opt/kimi-claw --strip-components=1 \
     && cd /opt/kimi-claw && npm install --omit=dev --prefer-online && npm cache clean --force
 
-# Copy startup entrypoint and edge proxy
+# Copy startup entrypoint, worker limits, and edge proxy
 COPY proxy.js /app/proxy.js
+COPY limit-workers.cjs /app/limit-workers.cjs
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
@@ -55,7 +56,7 @@ ENV MALLOC_ARENA_MAX=1
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
 ENV MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=215 --max-semi-space-size=8"
+ENV NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=215 --max-semi-space-size=8"
 
 EXPOSE 10000 18789
 

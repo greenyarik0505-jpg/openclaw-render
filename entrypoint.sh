@@ -54,11 +54,11 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Enforce worker heap limit patch (guarantees workers never exceed 8MB heap)
+# Neutralize worker-heap-flag (all worker limits are directly enforced by /app/limit-workers.cjs)
 WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" 2>/dev/null || true)
 if [ -n "$WH" ]; then
-    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=8 --max-heap-size=8/g' "$WH" 2>/dev/null || true
-    echo "Enforced worker-heap-flag at $WH"
+    echo '// disabled' > "$WH"
+    echo "Neutralized worker-heap-flag at $WH"
 fi
 
 # 3. Setup Gateway Token
@@ -166,7 +166,7 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=215 --max-semi-space-size=8"
+export NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=215 --max-semi-space-size=8"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -174,7 +174,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node --optimize-for-size --max-old-space-size=215 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node -r /app/limit-workers.cjs --optimize-for-size --max-old-space-size=215 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

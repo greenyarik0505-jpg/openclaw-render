@@ -3,6 +3,9 @@ set -e
 
 echo "=== Starting OpenClaw Container Initialization ==="
 
+# Limit V8 heap to 256MB to fit comfortably within memory limits
+export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=256"
+
 # 1. Setup Persistent Storage & Directories
 if [ -d "/data" ]; then
     echo "Persistent volume /data detected. Configuring persistent directories..."
@@ -34,7 +37,7 @@ else
     echo "Using provided OPENCLAW_GATEWAY_TOKEN."
 fi
 
-# 3. Setup Kimi skills and extensions (zero runtime compile/install overhead)
+# 3. Setup Kimi skills and extensions
 if [ -d "/opt/kimiim/skills" ]; then
     mkdir -p "$OPENCLAW_WORKSPACE_DIR/skills"
     cp -rn /opt/kimiim/skills/* "$OPENCLAW_WORKSPACE_DIR/skills/" 2>/dev/null || true
@@ -43,8 +46,8 @@ fi
 
 if [ -d "/opt/kimi-claw" ]; then
     mkdir -p "$OPENCLAW_STATE_DIR/extensions"
-    cp -rn /opt/kimi-claw "$OPENCLAW_STATE_DIR/extensions/kimi-claw" 2>/dev/null || true
-    echo "Kimi Claw extension deployed."
+    ln -sfn /opt/kimi-claw "$OPENCLAW_STATE_DIR/extensions/kimi-claw"
+    echo "Kimi Claw extension linked."
 fi
 
 # 4. Configure openclaw.json with Gateway and Kimi Bridge

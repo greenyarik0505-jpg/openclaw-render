@@ -7,7 +7,6 @@ echo "=== Starting OpenClaw Container Initialization ==="
 ulimit -s 1024 2>/dev/null || true
 export UV_THREADPOOL_SIZE=2
 export MALLOC_ARENA_MAX=2
-export OPENCLAW_SKIP_CHANNELS=1
 export OPENCLAW_SKIP_CRON=1
 export OPENCLAW_SKIP_GMAIL_WATCHER=1
 export OPENCLAW_DISABLE_BONJOUR=1
@@ -116,6 +115,38 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
         "http://127.0.0.1:10000",
         "http://localhost:18789",
         "http://127.0.0.1:18789"
+      ]
+    }
+  },
+  "channels": {
+    "kimi-claw": {
+      "enabled": true
+    }
+  },
+  "plugins": {
+    "enabled": true,
+    "entries": {
+      "kimi-claw": {
+        "enabled": true,
+        "config": {
+          "bridge": {
+            "url": "wss://www.kimi.com/api-claw/bots/agent-ws",
+            "token": "$KIMI_TOKEN",
+            "kimiapiHost": "https://www.kimi.com/api-claw",
+            "promptTimeoutMs": 1800000
+          }
+        }
+      }
+    },
+    "installs": {
+      "kimi-claw": {
+        "source": "path",
+        "path": "/opt/kimi-claw"
+      }
+    },
+    "load": {
+      "paths": [
+        "/opt/kimi-claw"
       ]
     }
   }

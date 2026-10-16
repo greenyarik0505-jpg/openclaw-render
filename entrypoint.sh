@@ -12,7 +12,12 @@ export PORT="$PORT"
 export OPENCLAW_INTERNAL_PORT="18789"
 
 echo "Starting Edge Gateway Proxy on port $PORT..."
-node /app/proxy.js &
+(
+  while true; do
+    node /app/proxy.js || true
+    sleep 1
+  done
+) &
 PROXY_PID=$!
 echo "Edge Gateway Proxy started with PID: $PROXY_PID."
 
@@ -119,4 +124,4 @@ echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 openclaw gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured &
 GATEWAY_PID=$!
 
-wait -n "$GATEWAY_PID" "$PROXY_PID"
+wait "$GATEWAY_PID"

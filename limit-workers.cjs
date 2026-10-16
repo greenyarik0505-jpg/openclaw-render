@@ -23,4 +23,13 @@ class LimitedWorker extends OriginalWorker {
 
 wt.Worker = LimitedWorker;
 
+// Run periodic GC on main thread to actively release dead bootstrap memory
+if (wt.isMainThread && typeof global.gc === 'function') {
+  setInterval(() => {
+    try {
+      global.gc();
+    } catch {}
+  }, 15000).unref();
+}
+
 

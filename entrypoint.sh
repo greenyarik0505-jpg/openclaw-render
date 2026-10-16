@@ -10,7 +10,7 @@ export MALLOC_ARENA_MAX=1
 export NODE_DISABLE_COMPILE_CACHE=1
 if [ -f "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2" ]; then
     export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
-    export MALLOC_CONF="narenas:1,dirty_decay_ms:500,muzzy_decay_ms:500,background_thread:true"
+    export MALLOC_CONF="narenas:1,tcache:false,dirty_decay_ms:0,muzzy_decay_ms:0"
 fi
 export OPENCLAW_SKIP_CRON=1
 export OPENCLAW_SKIP_GMAIL_WATCHER=1
@@ -167,7 +167,7 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="-r /app/limit-workers.cjs --max-old-space-size=235 --max-semi-space-size=8"
+export NODE_OPTIONS="-r /app/limit-workers.cjs --expose-gc --max-old-space-size=220 --max-semi-space-size=4"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -175,7 +175,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node -r /app/limit-workers.cjs --optimize-for-size --max-old-space-size=235 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
+    node -r /app/limit-workers.cjs --expose-gc --optimize-for-size --max-old-space-size=220 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

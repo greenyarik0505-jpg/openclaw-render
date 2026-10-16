@@ -122,12 +122,15 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set lean memory limits to keep OpenClaw strictly within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=128 --optimize-for-size"
+export NODE_OPTIONS="--max-old-space-size=128"
+
+OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
+echo "Resolved openclaw binary: $OPENCLAW_BIN"
 
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    openclaw gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --verbose &
+    node --optimize-for-size "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --verbose &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

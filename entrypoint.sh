@@ -18,7 +18,7 @@ export PORT="$PORT"
 export OPENCLAW_INTERNAL_PORT="18789"
 
 echo "Starting Edge Gateway Proxy on port $PORT..."
-NODE_OPTIONS="--max-old-space-size=12 --max-semi-space-size=1 --optimize-for-size" node /app/proxy.js &
+NODE_OPTIONS="--max-old-space-size=12" node --optimize-for-size /app/proxy.js &
 PROXY_PID=$!
 echo "Edge Gateway Proxy started with PID: $PROXY_PID."
 
@@ -138,7 +138,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node --optimize-for-size "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node --optimize-for-size --max-old-space-size=192 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

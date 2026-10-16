@@ -4,16 +4,17 @@ const OriginalWorker = wt.Worker;
 class LimitedWorker extends OriginalWorker {
   constructor(filename, options = {}) {
     const script = String(filename || '');
-    const isHeavyWorker = script.includes('sqlite') || script.includes('state') || script.includes('read') || script.includes('session') || script.includes('agent');
-    const maxOldMb = isHeavyWorker ? 48 : 24;
+    // Heavy workers that evaluate SQLite schema or large preflight snapshots
+    const isHeavyWorker = script.includes('sqlite-store') || script.includes('state-read');
+    const maxOldMb = isHeavyWorker ? 38 : 16;
     const userLimits = options?.resourceLimits || {};
     const opts = {
       ...options,
       resourceLimits: {
         ...userLimits,
         maxOldGenerationSizeMb: maxOldMb,
-        maxYoungGenerationSizeMb: isHeavyWorker ? 8 : 4,
-        codeRangeSizeMb: isHeavyWorker ? 16 : 8,
+        maxYoungGenerationSizeMb: isHeavyWorker ? 6 : 2,
+        codeRangeSizeMb: isHeavyWorker ? 12 : 4,
         stackSizeMb: 1,
       }
     };
@@ -23,13 +24,11 @@ class LimitedWorker extends OriginalWorker {
 
 wt.Worker = LimitedWorker;
 
-// Run periodic GC on main thread to actively release dead bootstrap memory
+// Run proactive GC on main thread every 10s to continuously release dead memory on 512MB cgroup
 if (wt.isMainThread && typeof global.gc === 'function') {
   setInterval(() => {
     try {
       global.gc();
     } catch {}
-  }, 15000).unref();
+  }, 10000).unref();
 }
-
-

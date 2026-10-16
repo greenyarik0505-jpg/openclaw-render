@@ -167,7 +167,8 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="-r /app/limit-workers.cjs --expose-gc --max-old-space-size=220 --max-semi-space-size=4"
+export OPENCLAW_CONTROL_UI_DIR="/usr/local/lib/node_modules/openclaw/dist/control-ui"
+export NODE_OPTIONS="-r /app/limit-workers.cjs --expose-gc --max-old-space-size=210 --max-semi-space-size=4"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -175,10 +176,11 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node -r /app/limit-workers.cjs --expose-gc --optimize-for-size --max-old-space-size=220 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
+    node -r /app/limit-workers.cjs --expose-gc --optimize-for-size --max-old-space-size=210 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?
     echo "OpenClaw Gateway exited (code $EXIT_CODE). Restarting in 2s..."
     sleep 2
 done
+

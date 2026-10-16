@@ -1,17 +1,18 @@
 # OpenClaw Deployment Progress on Render
 
-## Status: Deploying Direct /health Handler & Balanced 200MB Heap
+## Status: 100% OPERATIONAL & FULLY STABILIZED (Deploy dep-db94esuk1f9s73fi7rhg)
 - **Date**: 2026-10-16
 - **Workspace**: Ярослав's workspace (`tea-d7te7mosfn5c73akpfjg`)
 - **Render Service Name**: `openclaw` (`srv-db8se049v7es73dndh90`)
 - **Public URL**: https://openclaw-tlzq.onrender.com
+- **Direct Auth URL**: https://openclaw-tlzq.onrender.com/?gatewayUrl=wss%3A%2F%2Fopenclaw-tlzq.onrender.com#token=oc_gw_7e8b91a24fd3c6e59012a4b8
 - **GitHub Repo**: https://github.com/greenyarik0505-jpg/openclaw-render
 - **Target Version**: OpenClaw v2026.10.4
-- **Gateway Port**: 10000 (HTTPS terminated by Render edge)
-- **Gateway Mode**: `local`, internal port: `18789`, proxy port: `10000`
-- **Public Origin**: `https://openclaw-tlzq.onrender.com`
+- **Gateway Port**: 10000 (terminated by Render edge)
+- **Gateway Internal Port**: 18789
 - **Gateway Token**: `oc_gw_7e8b91a24fd3c6e59012a4b8`
 - **Kimi Bot Token**: `km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`
+- **Bridge Subscription Status**: Connected & subscribed (`default_chat_id=1a14119a-ad12-8f62-8000-0920bab2c7bf`)
 
 ---
 

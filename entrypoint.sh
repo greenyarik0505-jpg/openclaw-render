@@ -22,7 +22,7 @@ export PORT="$PORT"
 export OPENCLAW_INTERNAL_PORT="18789"
 
 echo "Starting Edge Gateway Proxy on port $PORT..."
-LD_PRELOAD="" NODE_OPTIONS="--max-old-space-size=16" node --optimize-for-size /app/proxy.js &
+LD_PRELOAD="" NODE_OPTIONS="--max-old-space-size=16 --expose-gc" node /app/proxy.js &
 PROXY_PID=$!
 echo "Edge Gateway Proxy started with PID: $PROXY_PID."
 
@@ -127,10 +127,10 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
     "enabled": true,
     "allow": [
       "kimi-claw",
-      "openai",
-      "memory-core"
+      "openai"
     ],
     "deny": [
+      "memory-core",
       "anthropic",
       "canvas",
       "talk-voice",
@@ -168,7 +168,7 @@ EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
 export OPENCLAW_CONTROL_UI_DIR="/usr/local/lib/node_modules/openclaw/dist/control-ui"
-export NODE_OPTIONS="-r /app/limit-workers.cjs --expose-gc --max-old-space-size=220 --max-semi-space-size=4"
+export NODE_OPTIONS="-r /app/limit-workers.cjs --expose-gc --max-old-space-size=200 --max-semi-space-size=4"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -176,7 +176,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node -r /app/limit-workers.cjs --expose-gc --max-old-space-size=220 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
+    node -r /app/limit-workers.cjs --expose-gc --max-old-space-size=200 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

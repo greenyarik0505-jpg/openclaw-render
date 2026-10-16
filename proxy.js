@@ -16,6 +16,13 @@ process.on('unhandledRejection', (reason) => {
   console.error('[proxy] Unhandled rejection:', reason);
 });
 
+// Periodic GC for edge proxy
+if (typeof global.gc === 'function') {
+  setInterval(() => {
+    try { global.gc(); } catch {}
+  }, 10000).unref();
+}
+
 console.log(`[proxy] Initializing Edge Gateway Proxy on port ${PORT} -> ${TARGET_HOST}:${TARGET_PORT}`);
 console.log(`[proxy] Control UI static asset directory: ${CONTROL_UI_DIR}`);
 
@@ -155,7 +162,6 @@ const server = http.createServer((req, res) => {
 
   // 1. Health check handling for Render deployment probes (ALWAYS return 200 directly)
   if (req.url === '/health' || req.url === '/healthz' || req.url.startsWith('/health')) {
-    console.log(`[proxy] Health probe from ${req.headers['user-agent'] || 'Render'} -> 200 OK`);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true, status: 'healthy', uptime: Math.floor(process.uptime()) }));
     return;

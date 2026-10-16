@@ -96,6 +96,14 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
     "port": 18789,
     "bind": "loopback",
     "publicOrigin": "https://openclaw-tlzq.onrender.com",
+    "trustedProxies": [
+      "127.0.0.1",
+      "::1",
+      "10.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ],
+    "allowRealIpFallback": true,
     "auth": {
       "mode": "token",
       "token": "$OPENCLAW_GATEWAY_TOKEN"
@@ -115,30 +123,15 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
-export NODE_OPTIONS="--max-old-space-size=192 --max-semi-space-size=4"
+export NODE_OPTIONS="--max-old-space-size=128 --max-semi-space-size=2"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
 
-# Background watcher: waits for OpenClaw Gateway to bind port 18789
-(
-    echo "[watcher] Waiting for OpenClaw Gateway on port 18789..."
-    while ! curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:18789/" | grep -qE "^(200|302|401|403|404)$"; do
-        sleep 2
-    done
-    echo "[watcher] OpenClaw Gateway is ONLINE and bound to port 18789!"
-    echo "[watcher] Control UI is now fully accessible at https://openclaw-tlzq.onrender.com"
-    
-    KIMI_TOKEN="${KIMI_BOT_TOKEN:-km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1}"
-    if [ -n "$KIMI_TOKEN" ] && [ -d "/opt/kimi-claw" ]; then
-        echo "[watcher] Kimi Bot Token ready for bridge: ${KIMI_TOKEN:0:12}..."
-    fi
-) &
-
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node --optimize-for-size --max-old-space-size=192 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node --optimize-for-size --max-old-space-size=128 --max-semi-space-size=2 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

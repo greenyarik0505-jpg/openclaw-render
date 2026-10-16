@@ -41,6 +41,7 @@ const server = http.createServer((req, res) => {
   const clientHost = req.headers.host || 'openclaw-tlzq.onrender.com';
   headers['x-forwarded-host'] = clientHost;
   headers['x-forwarded-proto'] = 'https';
+  headers['x-forwarded-for'] = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
   headers['host'] = clientHost;
   delete headers['connection'];
 

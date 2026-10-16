@@ -1,6 +1,6 @@
 # OpenClaw Deployment Progress on Render
 
-## Status: Deploying In-Process Single-Daemon Architecture with Zero-OOM Memory Limits
+## Status: Deploying In-Process Architecture with 250MB Heap (Commit 250MB)
 - **Date**: 2026-10-16
 - **Workspace**: Ярослав's workspace (`tea-d7te7mosfn5c73akpfjg`)
 - **Render Service Name**: `openclaw` (`srv-db8se049v7es73dndh90`)

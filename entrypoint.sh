@@ -118,11 +118,6 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
       ]
     }
   },
-  "channels": {
-    "kimi-claw": {
-      "enabled": true
-    }
-  },
   "plugins": {
     "enabled": true,
     "entries": {

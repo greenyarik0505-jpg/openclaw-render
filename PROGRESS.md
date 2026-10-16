@@ -37,8 +37,8 @@
 - [x] Diagnosed cgroup OOM: OpenClaw `worker-heap-flag.mjs` was resetting `--max-old-space-size=0 --max-heap-size=0` for all worker threads, causing workers (SQLite, Control UI asset worker, etc.) to allocate unbounded 4.2GB heaps.
 - [x] Patched `worker-heap-flag.mjs` to `--max-old-space-size=16 --max-heap-size=16` in Dockerfile and entrypoint.sh to strictly cap worker memory.
 - [x] Added `ulimit -s 1024` to cap thread stack size at 1MB, eliminating virtual memory sprawl.
-- [x] Observed precise peak JS heap usage at 118.1MB during `gateway.server-start-import`.
-- [x] Tuned V8 heap to `--max-old-space-size=160 --max-semi-space-size=4` providing perfect headroom for 118MB peak while staying 200MB+ below 512MB container limit.
+- [x] Observed mark-compact pressure at 158.4MB during HTTP server initialization.
+- [x] Set V8 heap to `--max-old-space-size=256 --max-semi-space-size=8` providing ample headroom for ~180MB peak while total container memory (~360MB) remains well within the 512MB cgroup ceiling.
 - [ ] Deploy fix to Render and verify HTTP 200 on Control UI.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

@@ -62,6 +62,13 @@ if [ -n "$WH" ]; then
     echo "Neutralized worker-heap-flag at $WH"
 fi
 
+# Neutralize memory-core (heavy vector/dreaming SQLite engine that wastes 40MB heap on 512MB tier)
+MC=$(find /usr/local/lib/node_modules/openclaw -path "*/extensions/memory-core/index.js" 2>/dev/null || true)
+if [ -n "$MC" ]; then
+    echo 'export default { id: "memory-core", name: "memory-core", register() {} };' > "$MC"
+    echo "Neutralized memory-core extension at $MC"
+fi
+
 # 3. Setup Gateway Token
 if [ -z "$OPENCLAW_GATEWAY_TOKEN" ]; then
     export OPENCLAW_GATEWAY_TOKEN="oc_gw_7e8b91a24fd3c6e59012a4b8"
@@ -145,6 +152,9 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
       "xai"
     ],
     "entries": {
+      "memory-core": {
+        "enabled": false
+      },
       "kimi-claw": {
         "enabled": true,
         "config": {
@@ -168,7 +178,7 @@ EOF
 
 # Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
 export OPENCLAW_CONTROL_UI_DIR="/usr/local/lib/node_modules/openclaw/dist/control-ui"
-export NODE_OPTIONS="-r /app/limit-workers.cjs --expose-gc --max-old-space-size=200 --max-semi-space-size=4"
+export NODE_OPTIONS="-r /app/limit-workers.cjs --expose-gc --max-old-space-size=240 --max-semi-space-size=4"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -176,7 +186,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node -r /app/limit-workers.cjs --expose-gc --max-old-space-size=200 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
+    node -r /app/limit-workers.cjs --expose-gc --max-old-space-size=240 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

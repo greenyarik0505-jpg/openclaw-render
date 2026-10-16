@@ -9,7 +9,7 @@ export UV_THREADPOOL_SIZE=2
 export MALLOC_ARENA_MAX=1
 if [ -f "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2" ]; then
     export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
-    export MALLOC_CONF="narenas:1,dirty_decay_ms:0,muzzy_decay_ms:0"
+    export MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
 fi
 export OPENCLAW_SKIP_CRON=1
 export OPENCLAW_SKIP_GMAIL_WATCHER=1
@@ -54,11 +54,11 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Neutralize worker-heap-flag (preventing setFlagsFromString from overriding V8 heap limits)
+# Enforce worker heap limit patch (guarantees workers never exceed 8MB heap)
 WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" 2>/dev/null || true)
 if [ -n "$WH" ]; then
-    echo '// disabled' > "$WH"
-    echo "Neutralized worker-heap-flag at $WH"
+    sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=8 --max-heap-size=8/g' "$WH" 2>/dev/null || true
+    echo "Enforced worker-heap-flag at $WH"
 fi
 
 # 3. Setup Gateway Token
@@ -165,8 +165,8 @@ cat <<EOF > "$OPENCLAW_CONFIG_PATH"
 }
 EOF
 
-# Set balanced memory limits: 260MB heap gives enough headroom above baseline to prevent V8 allocation aborts
-export NODE_OPTIONS="--max-old-space-size=260 --max-semi-space-size=16"
+# Set balanced memory limits to prevent JS heap OOM while staying within 512MB Free Tier
+export NODE_OPTIONS="--max-old-space-size=215 --max-semi-space-size=8"
 
 OPENCLAW_BIN="$(command -v openclaw || echo /usr/local/bin/openclaw)"
 echo "Resolved openclaw binary: $OPENCLAW_BIN"
@@ -174,7 +174,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node --max-old-space-size=260 --max-semi-space-size=16 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node --optimize-for-size --max-old-space-size=215 --max-semi-space-size=8 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?

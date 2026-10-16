@@ -22,7 +22,7 @@ RUN npm install -g openclaw@2026.10.4 --prefer-online && npm cache clean --force
     && SP=$(find /usr/local/lib/node_modules/openclaw -name "worker.js" | grep "spawn-broker" || true) \
     && if [ -n "$SP" ]; then echo 'process.exit(1);' > "$SP"; echo "Disabled spawn-broker at $SP"; fi \
     && WH=$(find /usr/local/lib/node_modules/openclaw -name "worker-heap-flag.mjs" || true) \
-    && if [ -n "$WH" ]; then echo '// disabled' > "$WH"; echo "Neutralized worker-heap-flag at $WH"; fi
+    && if [ -n "$WH" ]; then sed -i 's/--max-old-space-size=0 --max-heap-size=0/--max-old-space-size=8 --max-heap-size=8/g' "$WH"; echo "Patched worker-heap-flag at $WH"; fi
 
 # 2. Pre-download and install kimiim-cli binary and skills at build time
 RUN mkdir -p /usr/local/bin /opt/kimiim/skills/kimiim /opt/kimiim/skills/worker-safety /opt/kimiim/skills/time-awareness \
@@ -53,9 +53,9 @@ ENV OPENCLAW_SKIP_GMAIL_WATCHER=1
 ENV OPENCLAW_DISABLE_BONJOUR=1
 ENV MALLOC_ARENA_MAX=1
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
-ENV MALLOC_CONF="narenas:1,dirty_decay_ms:0,muzzy_decay_ms:0"
+ENV MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:1000,background_thread:true"
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=260 --max-semi-space-size=16"
+ENV NODE_OPTIONS="--max-old-space-size=215 --max-semi-space-size=8"
 
 EXPOSE 10000 18789
 

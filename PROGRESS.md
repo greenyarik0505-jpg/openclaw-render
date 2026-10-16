@@ -47,7 +47,10 @@
 - [x] Configured `gateway.trustedProxies` with loopback/private subnets and `allowRealIpFallback: true` in openclaw.json so internal proxying succeeds without unattributable proxy rejections.
 - [x] Forwarded `x-forwarded-for` header in `proxy.js`.
 - [x] Removed aggressive background bash polling loop (curl in subshell every 2s) from entrypoint.sh.
-- [x] Deploy `dep-db911g0n74is73d4k8pg` (commit `8624e74`) successfully deployed and is LIVE.
+- [x] Pre-cached Kimi plugin and skills at build time.
+- [x] Configured Kimi Claw Bridge in openclaw.json (`plugins.load.paths`, `plugins.entries["kimi-claw"]`, bot token `km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`).
+- [x] Verified Kimi Claw plugin successfully loaded in OpenClaw (`/opt/kimi-claw/dist/index.js`, plugin v0.27.1).
+- [x] Verified Kimi Claw outbound live IM sender registered (`agentId=main`, `accountId=main`, `ownerId=2b3902d0-5745-4df9-b52e-d8a99c576c4f`).
 - [x] Verified live HTTP 200 OK response from OpenClaw Control UI at `https://openclaw-tlzq.onrender.com`.
-- [x] Verified Kimi Claw Bridge pre-configuration (`km_b_prod_rEMqfnmmRPv1kp4lDcEgQ7voT58I3ti1`).
-- [x] Completed instructions for connecting AI models.
+- [x] Verified gateway proxy forwarding in <1s.
+- [x] OpenClaw + Kimi Claw is 100% LIVE and operational!

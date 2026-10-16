@@ -34,7 +34,8 @@ const server = http.createServer((req, res) => {
       port: TARGET_PORT,
       path: req.url,
       method: 'GET',
-      timeout: 2000
+      headers: { host: `127.0.0.1:${TARGET_PORT}` },
+      timeout: 5000
     }, (healthRes) => {
       if (hasResponded) return;
       hasResponded = true;
@@ -60,47 +61,64 @@ const server = http.createServer((req, res) => {
   }
 
   // 2. Standard HTTP request proxying
-  const sendHttpFallback = (statusCode = 503) => {
+  const sendHttpFallback = (statusCode = 503, errMsg = 'OpenClaw Gateway is Starting') => {
     if (hasResponded) return;
     hasResponded = true;
     try {
       res.writeHead(statusCode, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>OpenClaw Starting</title><meta http-equiv="refresh" content="3"></head><body style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f172a;color:#f8fafc"><div style="text-align:center;padding:2rem;background:#1e293b;border-radius:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.5)"><h2>OpenClaw Gateway is Starting</h2><p style="color:#94a3b8">The gateway service is completing initialization. This page will refresh automatically in 3 seconds...</p></div></body></html>');
+      res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>OpenClaw</title><meta http-equiv="refresh" content="3"></head><body style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f172a;color:#f8fafc"><div style="text-align:center;padding:2rem;background:#1e293b;border-radius:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.5)"><h2>OpenClaw Gateway</h2><p style="color:#94a3b8">${errMsg}. The page will refresh in 3 seconds...</p></div></body></html>`);
     } catch {}
   };
+
+  const headers = { ...req.headers };
+  headers['x-forwarded-host'] = req.headers.host || 'openclaw-tlzq.onrender.com';
+  headers['x-forwarded-proto'] = 'https';
+  headers['host'] = `127.0.0.1:${TARGET_PORT}`;
+  delete headers['connection'];
+
+  console.log(`[proxy] Inbound ${req.method} ${req.url}`);
 
   const proxyReq = http.request({
     host: TARGET_HOST,
     port: TARGET_PORT,
     path: req.url,
     method: req.method,
-    headers: req.headers,
+    headers: headers,
     timeout: 30000
   }, (proxyRes) => {
     if (hasResponded) return;
     hasResponded = true;
+    console.log(`[proxy] Target response ${proxyRes.statusCode} for ${req.method} ${req.url}`);
     try {
       res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
       proxyRes.pipe(res);
-    } catch {
-      sendHttpFallback(502);
+    } catch (e) {
+      sendHttpFallback(502, 'Bad Gateway');
     }
   });
 
   proxyReq.on('timeout', () => {
+    console.warn(`[proxy] Target timeout for ${req.url}`);
     proxyReq.destroy();
-    sendHttpFallback(504);
+    sendHttpFallback(504, 'Gateway Timeout - backend starting');
   });
 
-  proxyReq.on('error', () => {
-    sendHttpFallback(503);
+  proxyReq.on('error', (err) => {
+    console.warn(`[proxy] Target connection error for ${req.url}:`, err.message);
+    sendHttpFallback(503, 'Gateway initializing');
   });
 
-  req.pipe(proxyReq);
+  // End request immediately if no body (GET/HEAD) to prevent connection hanging
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    proxyReq.end();
+  } else {
+    req.pipe(proxyReq);
+  }
 });
 
 // 3. WebSocket upgrade handling
 server.on('upgrade', (req, clientSocket, head) => {
+  console.log(`[proxy] WebSocket upgrade request for ${req.url}`);
   const targetSocket = net.connect(TARGET_PORT, TARGET_HOST, () => {
     targetSocket.write(`${req.method} ${req.url} HTTP/${req.httpVersion}\r\n`);
     for (let i = 0; i < req.rawHeaders.length; i += 2) {
@@ -112,13 +130,16 @@ server.on('upgrade', (req, clientSocket, head) => {
     }
     clientSocket.pipe(targetSocket);
     targetSocket.pipe(clientSocket);
+    console.log(`[proxy] WebSocket tunnel connected for ${req.url}`);
   });
 
-  targetSocket.on('error', () => {
+  targetSocket.on('error', (err) => {
+    console.warn('[proxy] WebSocket target error:', err.message);
     try { clientSocket.destroy(); } catch {}
   });
 
-  clientSocket.on('error', () => {
+  clientSocket.on('error', (err) => {
+    console.warn('[proxy] WebSocket client error:', err.message);
     try { targetSocket.destroy(); } catch {}
   });
 });

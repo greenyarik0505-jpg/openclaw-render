@@ -33,8 +33,9 @@
 - [x] Diagnosed cgroup OOM: multi-process `spawn-broker` consumes ~80MB extra RAM alongside SQLite worker threads.
 - [x] Patched Dockerfile to neutralize `spawn-broker/worker.js`, triggering OpenClaw's native fallback: `in-process spawning is in effect for the lifetime of this process` (saving 80MB RAM).
 - [x] Added `OPENCLAW_SKIP_CHANNELS=1` to disable unused channel poller overhead and channel-health-monitor loops.
-- [x] Configured `--compact` logging and tuned V8 heap to `--max-old-space-size=160 --max-semi-space-size=4`.
-- [ ] Push commit and trigger Render deploy.
-- [ ] Verify HTTP `/health` and Gateway handshake.
+- [x] Configured `--compact` logging and tuned V8 heap to `--max-old-space-size=250 --max-semi-space-size=8`.
+- [x] Verified OpenClaw successfully boots to `http.bound` in single-daemon mode without OOM.
+- [x] Fixed `proxy.js` GET/HEAD request body termination (`proxyReq.end()`) to eliminate 30-second gateway timeouts.
+- [ ] Deploy fix to Render and verify HTTP 200 on Control UI.
 - [ ] Verify Kimi Claw Bridge connection.
 - [ ] Provide user with live URL and AI model configuration guide.

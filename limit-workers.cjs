@@ -1,10 +1,3 @@
-// Enforces strict single-worker scaling and V8 isolate resource limits on Render Free Tier
-const os = require('node:os');
-try {
-  os.availableParallelism = () => 1;
-  const origCpus = os.cpus.bind(os);
-  os.cpus = () => [origCpus()[0] || { model: 'vCPU', speed: 2000, times: {} }];
-} catch {}
 const wt = require('node:worker_threads');
 const OriginalWorker = wt.Worker;
 
@@ -15,9 +8,9 @@ class LimitedWorker extends OriginalWorker {
       ...options,
       resourceLimits: {
         ...userLimits,
-        maxOldGenerationSizeMb: 12,
-        maxYoungGenerationSizeMb: 2,
-        codeRangeSizeMb: 4,
+        maxOldGenerationSizeMb: 24,
+        maxYoungGenerationSizeMb: 4,
+        codeRangeSizeMb: 8,
         stackSizeMb: 1,
       }
     };
@@ -26,4 +19,5 @@ class LimitedWorker extends OriginalWorker {
 }
 
 wt.Worker = LimitedWorker;
+
 

@@ -175,7 +175,7 @@ echo "Resolved openclaw binary: $OPENCLAW_BIN"
 set +e
 echo "=== Launching OpenClaw Gateway on internal port 18789 ==="
 while true; do
-    node -r /app/limit-workers.cjs --optimize-for-size --max-old-space-size=200 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact &
+    node -r /app/limit-workers.cjs --optimize-for-size --max-old-space-size=200 --max-semi-space-size=4 "$OPENCLAW_BIN" gateway run --bind loopback --port 18789 --token "$OPENCLAW_GATEWAY_TOKEN" --allow-unconfigured --compact --verbose &
     GATEWAY_PID=$!
     wait "$GATEWAY_PID"
     EXIT_CODE=$?
